@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyCast | Live Weather</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            color: white;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="max-w-4xl w-full space-y-6">
+        <div class="relative group">
+            <input type="text" id="cityInput" placeholder="Search city (e.g. Indore, London)..." 
+                class="w-full p-5 pl-14 glass outline-none focus:ring-2 focus:ring-blue-400/50 transition-all text-lg">
+            <i class="fa-solid fa-location-dot absolute left-5 top-1/2 -translate-y-1/2 text-blue-400 text-xl"></i>
+            <button onclick="getWeather()" class="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-xl font-bold transition-transform active:scale-95">
+                Check
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 glass p-10 flex flex-col justify-between min-h-[350px]">
+                <div>
+                    <h1 id="cityName" class="text-5xl font-black tracking-tight">London</h1>
+                    <p id="dateTime" class="text-blue-300 mt-2 font-medium uppercase tracking-widest text-sm">Loading...</p>
+                </div>
+                
+                <div class="flex items-center gap-10">
+                    <span id="temp" class="text-9xl font-thin tracking-tighter">--°</span>
+                    <div id="iconContainer" class="text-7xl">
+                        <i class="fa-solid fa-cloud-sun-rain text-blue-300"></i>
+                    </div>
+                </div>
+                
+                <p id="description" class="text-2xl font-light capitalize opacity-90">Clear Sky</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+                <div class="glass p-6 flex items-center gap-5">
+                    <div class="h-12 w-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400">
+                        <i class="fa-solid fa-wind text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs opacity-50 uppercase font-bold">Wind Speed</p>
+                        <p id="windSpeed" class="text-xl font-semibold">-- m/s</p>
+                    </div>
+                </div>
+
+                <div class="glass p-6 flex items-center gap-5">
+                    <div class="h-12 w-12 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-400">
+                        <i class="fa-solid fa-sun text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs opacity-50 uppercase font-bold">UV Index</p>
+                        <p id="uvIndex" class="text-xl font-semibold">Low</p>
+                    </div>
+                </div>
+
+                <div class="glass p-6 flex items-center gap-5">
+                    <div class="h-12 w-12 bg-cyan-500/20 rounded-full flex items-center justify-center text-cyan-400">
+                        <i class="fa-solid fa-droplet text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs opacity-50 uppercase font-bold">Humidity</p>
+                        <p id="humidity" class="text-xl font-semibold">--%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "e03900d9971ba2a55f2974edd88c1606";
+
+        async function getWeather() {
+            const city = document.getElementById('cityInput').value || 'London';
+            // Customised URL with your key and metric units (Celsius)
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Update UI elements
+                    document.getElementById('cityName').innerText = data.name;
+                    document.getElementById('temp').innerText = `${Math.round(data.main.temp)}°`;
+                    document.getElementById('description').innerText = data.weather[0].description;
+                    document.getElementById('windSpeed').innerText = `${data.wind.speed} m/s`;
+                    document.getElementById('humidity').innerText = `${data.main.humidity}%`;
+                    
+                    // Logic for UV (Standard API doesn't provide UV, so we show a relative risk based on cloudiness)
+                    const clouds = data.clouds.all;
+                    document.getElementById('uvIndex').innerText = clouds > 50 ? "Low" : "Moderate";
+
+                    // Update Date
+                    const now = new Date();
+                    document.getElementById('dateTime').innerText = now.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } else {
+                    alert("City not found!");
+                }
+            } catch (err) {
+                console.error("Fetch Error:", err);
+            }
+        }
+
+        // Run on startup
+        getWeather();
+    </script>
+</body>
+</html>
